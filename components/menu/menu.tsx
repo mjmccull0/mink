@@ -12,6 +12,13 @@ import {
 import { useExec } from '../../hooks/useExec.ts';
 import { getCommandItems, CommandItem } from '../../utils/args.ts';
 
+
+interface HistoryEntry {
+  items: CommandItem[];
+  label: string;
+  activeKey: string;
+}
+
 // Fetch initial items before render
 const initialItems = await getCommandItems(process.argv.slice(2));
 
@@ -26,7 +33,17 @@ function Menu({ initialItems }: { initialItems: CommandItem[] }) {
 	
 	// State for the current menu and navigation history
 	const [menuItems, setMenuItems] = useState<CommandItem[]>(initialItems);
-	const [history, setHistory] = useState<CommandItem[][]>([]);
+	const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [currentMenuLabel, setCurrentMenuLabel] = useState('Main');
+
+  const [pendingFocusKey, setPendingFocusKey] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (pendingFocusKey) {
+      focus(pendingFocusKey);
+      setPendingFocusKey(null); // Clear it so it doesn't re-focus on every render
+    }
+  }, [ menuItems, pendingFocusKey, focus ])
 
 	const handlePress = async (item: CommandItem) => {
     const cmd = item.command.trim();
@@ -39,12 +56,17 @@ function Menu({ initialItems }: { initialItems: CommandItem[] }) {
 				const nextItems = await getCommandItems([target]);
 				
 				// Save current menu to history before switching
-				setHistory((prev) => [...prev, menuItems]);
+        setHistory((prev) => [
+          ...prev,
+          { items: menuItems, label: currentMenuLabel, activeKey: item.key }
+        ]);
+
 				setMenuItems(nextItems);
+        setCurrentMenuLabel(item.label.replace('...', ''));
 				
 				// Focus the first item of the new menu
 				if (nextItems.length > 0) {
-					focus(nextItems[0].key);
+          setPendingFocusKey(nextItems[0].key);
 				}
 			} catch (err) {
 				process.stderr.write(`\n❌ Failed to open menu: ${target}\n`);
@@ -65,14 +87,13 @@ function Menu({ initialItems }: { initialItems: CommandItem[] }) {
 
 	const goBack = () => {
 		if (history.length > 0) {
-			const prevMenu = history[history.length - 1];
+			const lastState = history[history.length - 1] as HistoryEntry;
 			setHistory((prev) => prev.slice(0, -1));
-			setMenuItems(prevMenu);
-			
-			// Focus the first item of the previous menu
-			if (prevMenu.length > 0) {
-				focus(prevMenu[0].key);
-			}
+			setMenuItems(lastState.items);
+      setCurrentMenuLabel(lastState.label);
+		
+      // Restore previously focused option
+      setPendingFocusKey(lastState.activeKey);
 		}
 	};
 
@@ -89,23 +110,33 @@ function Menu({ initialItems }: { initialItems: CommandItem[] }) {
 		}
 	});
 
-	return (
+  // Construct the breadcrumb string
+	const breadcrumbs = [...history.map(h => h.label), currentMenuLabel].join(' › ');
+
+return (
 		<Box flexDirection="column" padding={1}>
+			{/* Breadcrumb Header */}
 			<Box borderStyle="round" paddingX={1} marginBottom={1} flexDirection="column">
-				<Text italic color="cyan">{'Select an item and press Enter'}</Text>
-				{history.length > 0 && (
-					<Text dimColor>Press [Esc] to go back</Text>
-				)}
+				<Box marginBottom={history.length > 0 ? 0 : 0}>
+					<Text color="cyan" bold>{breadcrumbs}</Text>
+				</Box>
+				<Text dimColor italic>{'Select an item and press Enter'}</Text>
 			</Box>
 
 			{menuItems.map((item) => (
 				<Item
-					key={`${history.length}-${item.key}`} // Unique key per level
+					key={`${history.length}-${item.key}`}
 					id={item.key}
 					label={item.label}
 					onPress={() => handlePress(item)}
 				/>
 			))}
+			
+			{history.length > 0 && (
+				<Box marginTop={1}>
+					<Text dimColor>Press [Esc] to go back</Text>
+				</Box>
+			)}
 		</Box>
 	);
 }
