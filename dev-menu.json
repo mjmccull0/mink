@@ -1,0 +1,5 @@
+[
+  { "key": "d", "label": "ls", "command": "ls" },
+  { "key": "o", "label": "Git Status", "command": "git status" },
+  { "key": "q", "label": "Quit", "command": "exit" }
+]

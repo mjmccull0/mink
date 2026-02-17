@@ -1,0 +1,5 @@
+[
+  { "key": "d", "label": "Development...", "command": "open:dev-menu.json" },
+  { "key": "o", "label": "Operations...", "command": "mink-open dev-menu.json" },
+  { "key": "q", "label": "Quit", "command": "exit" }
+]

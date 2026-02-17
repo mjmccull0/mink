@@ -1,0 +1,17 @@
+[
+  {
+    "key": "b",
+    "label": "Build All",
+    "command": "yarn run build"
+  },
+  {
+    "key": "e",
+    "label": "Run Examples",
+    "command": "project_examples"
+  },
+  {
+    "key": "p",
+    "label": "Project Menu",
+    "command": "project"
+  }
+]
