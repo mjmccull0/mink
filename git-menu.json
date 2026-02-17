@@ -1,0 +1,13 @@
+[
+  { "label": "amend", "command": "amend_commit" },
+  { "label": "backup", "command": "project_snapshot" },
+  { "label": "create", "command": "project_branch_create" },
+  { "label": "diff", "command": "project_diff" },
+  { "label": "push", "command": "project_push" },
+  { "label": "rebase", "command": "project_rebase" },
+  { "label": "reset", "command": "project_reset" },
+  { "label": "squash", "command": "project_squash" },
+  { "label": "status", "command": "git status" },
+  { "label": "switch", "command": "project_branch_switch" },
+  { "label": "undo", "command": "project_undo_wizard" }
+]
